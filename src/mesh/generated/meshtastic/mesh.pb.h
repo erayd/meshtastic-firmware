@@ -428,9 +428,7 @@ typedef enum _meshtastic_MeshPacket_Delayed {
     /* The message is delayed and was originally a broadcast */
     meshtastic_MeshPacket_Delayed_DELAYED_BROADCAST = 1,
     /* The message is delayed and was originally a direct message */
-    meshtastic_MeshPacket_Delayed_DELAYED_DIRECT = 2,
-    /* The rebroadcast of this message is delayed because another node was heard rebroadcasting it. */
-    meshtastic_MeshPacket_Delayed_DELAYED_REBROADCAST = 3
+    meshtastic_MeshPacket_Delayed_DELAYED_DIRECT = 2
 } meshtastic_MeshPacket_Delayed;
 
 /* Log levels, chosen to match python logging conventions. */
@@ -1125,8 +1123,8 @@ extern "C" {
 #define _meshtastic_MeshPacket_Priority_ARRAYSIZE ((meshtastic_MeshPacket_Priority)(meshtastic_MeshPacket_Priority_MAX+1))
 
 #define _meshtastic_MeshPacket_Delayed_MIN meshtastic_MeshPacket_Delayed_NO_DELAY
-#define _meshtastic_MeshPacket_Delayed_MAX meshtastic_MeshPacket_Delayed_DELAYED_REBROADCAST
-#define _meshtastic_MeshPacket_Delayed_ARRAYSIZE ((meshtastic_MeshPacket_Delayed)(meshtastic_MeshPacket_Delayed_DELAYED_REBROADCAST+1))
+#define _meshtastic_MeshPacket_Delayed_MAX meshtastic_MeshPacket_Delayed_DELAYED_DIRECT
+#define _meshtastic_MeshPacket_Delayed_ARRAYSIZE ((meshtastic_MeshPacket_Delayed)(meshtastic_MeshPacket_Delayed_DELAYED_DIRECT+1))
 
 #define _meshtastic_LogRecord_Level_MIN meshtastic_LogRecord_Level_UNSET
 #define _meshtastic_LogRecord_Level_MAX meshtastic_LogRecord_Level_CRITICAL
