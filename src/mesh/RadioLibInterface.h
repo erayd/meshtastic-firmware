@@ -151,13 +151,13 @@ class RadioLibInterface : public RadioInterface, protected concurrency::Notified
      * random timer with certain min. and max. settings
      * @return Timestamp after which the packet may be sent
      */
-    uint32_t startTransmitTimer(bool withDelay = true);
+    void startTransmitTimer(bool withDelay = true);
 
     /**
      * timer scaled to SNR of to be flooded packet
      * @return Timestamp after which the packet may be sent
      */
-    uint32_t startTransmitTimerSNR(float snr);
+    void startTransmitTimerSNR(float snr);
 
     void handleTransmitInterrupt();
     void handleReceiveInterrupt();
