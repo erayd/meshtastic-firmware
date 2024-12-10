@@ -285,7 +285,7 @@ void RadioLibInterface::onNotify(uint32_t notification)
                         startReceive();      // try receiving this packet, afterwards we'll be trying to transmit again
                         if (txp->tx_after) {
                             // If we're using the late rebroadcast window, kick it down the road some more
-                            txp->tx_after = max(txp->tx_after, millis()) +
+                            txp->tx_after = max(txp->tx_after, (uint32_t)millis()) +
                                             (txp->rx_snr ? getTxDelayMsecWeighted(txp->rx_snr) : getTxDelayMsec());
                             notifyLater(txp->tx_after - millis(), TRANSMIT_DELAY_COMPLETED, false);
                         } else {
