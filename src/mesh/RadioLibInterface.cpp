@@ -357,14 +357,12 @@ void RadioLibInterface::startTransmitTimerSNR(float snr)
  */
 void RadioLibInterface::clampToLateRebroadcastWindow(NodeNum from, PacketId id)
 {
-    meshtastic_MeshPacket *p = txQueue.find(from, id);
-    if (p && !p->tx_after) { // If tx_after is set, we've already done this - don't do it twice!
+    // Look for non-late packets only, so we don't do this twice!
+    meshtastic_MeshPacket *p = txQueue.remove(from, id, true, false);
+    if (p) {
         p->tx_after = millis() + getTxDelayMsecWeightedWorst(p->rx_snr) + getTxDelayMsecWeighted(p->rx_snr);
-
-        // Ensures that non-delayed packets are handled first
-        p->priority = meshtastic_MeshPacket_Priority_MIN;
-
-        LOG_WARN("Move existing queued packet to the late rebroadcast window %dms from now", p->tx_after - millis());
+        txQueue.enqueue(p);
+        LOG_DEBUG("Move existing queued packet to the late rebroadcast window %dms from now", p->tx_after - millis());
     }
 }
 
