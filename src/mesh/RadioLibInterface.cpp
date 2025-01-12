@@ -303,6 +303,8 @@ void RadioLibInterface::setTransmitDelay()
         unsigned long add_delay = p->rx_rssi ? getTxDelayMsecWeighted(p->rx_snr) : getTxDelayMsec();
         unsigned long now = millis();
         p->tx_after = max(p->tx_after + add_delay, now + add_delay);
+        if (p->tx_after - now > 20000)
+            LOG_ERROR("Setting a delay of >20 seconds");
         notifyLater(now - p->tx_after, TRANSMIT_DELAY_COMPLETED, false);
     } else if (p->rx_snr == 0 && p->rx_rssi == 0) {
         /* We assume if rx_snr = 0 and rx_rssi = 0, the packet was generated locally.

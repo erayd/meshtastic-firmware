@@ -164,7 +164,11 @@ bool MeshPacketQueue::replaceLowerPriorityPacket(meshtastic_MeshPacket *p)
 void MeshPacketQueue::printStats()
 {
     int late = 0;
-    int too_late = 0;
+    int late_2 = 0;
+    int late_5 = 0;
+    int late_10 = 0;
+    int late_15 = 0;
+    int late_20 = 0;
     int pr_unset = 0;
     int pr_min = 0;
     int pr_background = 0;
@@ -181,7 +185,15 @@ void MeshPacketQueue::printStats()
         if (p->tx_after)
             late++;
         if (p->tx_after > millis() + 20000)
-            too_late++;
+            late_20++;
+        else if (p->tx_after > millis() + 15000)
+            late_15++;
+        else if (p->tx_after > millis() + 10000)
+            late_10++;
+        else if (p->tx_after > millis() + 5000)
+            late_5++;
+        else if (p->tx_after > millis() + 2000)
+            late_2++;
         switch (p->priority) {
         case meshtastic_MeshPacket_Priority_UNSET:
             pr_unset++;
@@ -222,6 +234,6 @@ void MeshPacketQueue::printStats()
              ">reliable: %d\n   >response: %d",
              late, pr_unset, pr_min, pr_background, pr_default, pr_reliable, pr_response);
     LOG_INFO("TX queue stats (contd)\n       >high: %d\n      >alert: %d\n        >ack: %d\n        >max: %d\n      "
-             ">other: %d\n  late >20s: %d",
-             pr_high, pr_alert, pr_ack, pr_max, pr_other, too_late);
+             ">other: %d\n  late >20s: %d, >15s: %d, >10s: %d, >5s: %d, >2s: %d",
+             pr_high, pr_alert, pr_ack, pr_max, pr_other, late_20, late_15, late_10, late_5, late_2);
 }
