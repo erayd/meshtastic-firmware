@@ -160,3 +160,64 @@ bool MeshPacketQueue::replaceLowerPriorityPacket(meshtastic_MeshPacket *p)
     // If the back packet's priority is not lower, no replacement occurs
     return false;
 }
+
+void MeshPacketQueue::printStats()
+{
+    int late = 0;
+    int pr_unset = 0;
+    int pr_min = 0;
+    int pr_background = 0;
+    int pr_default = 0;
+    int pr_reliable = 0;
+    int pr_response = 0;
+    int pr_high = 0;
+    int pr_alert = 0;
+    int pr_ack = 0;
+    int pr_max = 0;
+    int pr_other = 0;
+    for (auto it = queue.begin(); it != queue.end(); it++) {
+        auto p = (*it);
+        if (p->tx_after)
+            late++;
+        switch (p->priority) {
+        case meshtastic_MeshPacket_Priority_UNSET:
+            pr_unset++;
+            break;
+        case meshtastic_MeshPacket_Priority_MIN:
+            pr_min++;
+            break;
+        case meshtastic_MeshPacket_Priority_BACKGROUND:
+            pr_background++;
+            break;
+        case meshtastic_MeshPacket_Priority_DEFAULT:
+            pr_default++;
+            break;
+        case meshtastic_MeshPacket_Priority_RELIABLE:
+            pr_reliable++;
+            break;
+        case meshtastic_MeshPacket_Priority_RESPONSE:
+            pr_response++;
+            break;
+        case meshtastic_MeshPacket_Priority_HIGH:
+            pr_high++;
+            break;
+        case meshtastic_MeshPacket_Priority_ALERT:
+            pr_alert++;
+            break;
+        case meshtastic_MeshPacket_Priority_ACK:
+            pr_ack++;
+            break;
+        case meshtastic_MeshPacket_Priority_MAX:
+            pr_max++;
+            break;
+        default:
+            pr_other++;
+            break;
+        }
+    }
+    LOG_INFO("TX queue stats: \n       >late: %d\n      >unset: %d\n        >min: %d\n >background: %d\n    >default: %d\n   "
+             ">reliable: %d\n   >response: %d\n       >high: %d\n      >alert: %d\n        >ack: %d\n        >max: %d\n      "
+             ">other: %d",
+             late, pr_unset, pr_min, pr_background, pr_default, pr_reliable, pr_response, pr_high, pr_alert, pr_ack, pr_max,
+             pr_other);
+}

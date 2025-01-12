@@ -263,7 +263,9 @@ void RadioLibInterface::onNotify(uint32_t notification)
                     } else {
                         // Send any outgoing packets we have ready as fast as possible to keep the time between channel scan and
                         // actual transmission as short as possible
-                        LOG_INFO("About to transmit; %d packets are in the TX queue", txQueue.getMaxLen() - txQueue.getFree());
+                        LOG_INFO("About to transmit (pr=%d, late=%s); %d packets are in the TX queue",
+                                 txQueue.getFront()->priority, txQueue.getFront()->tx_after ? "true" : "false",
+                                 txQueue.getMaxLen() - txQueue.getFree());
                         txp = txQueue.dequeue();
                         assert(txp);
                         bool sent = startSend(txp);
@@ -273,6 +275,7 @@ void RadioLibInterface::onNotify(uint32_t notification)
                             airTime->logAirtime(TX_LOG, xmitMsec);
                         }
                         LOG_INFO("%d packets remain in the TX queue", txQueue.getMaxLen() - txQueue.getFree());
+                        txQueue.printStats();
                     }
                 }
             }
