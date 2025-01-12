@@ -302,7 +302,7 @@ void RadioLibInterface::setTransmitDelay()
     if (p->tx_after) {
         unsigned long add_delay = p->rx_rssi ? getTxDelayMsecWeighted(p->rx_snr) : getTxDelayMsec();
         unsigned long now = millis();
-        p->tx_after = max(p->tx_after + add_delay, now + add_delay);
+        p->tx_after = min(max(p->tx_after + add_delay, now + add_delay), 2 * getTxDelayMsecWeightedWorst(p->rx_snr));
         if (p->tx_after - now > 20000)
             LOG_ERROR("Setting a delay of >20 seconds");
         notifyLater(now - p->tx_after, TRANSMIT_DELAY_COMPLETED, false);
