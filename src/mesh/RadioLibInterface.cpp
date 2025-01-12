@@ -263,6 +263,7 @@ void RadioLibInterface::onNotify(uint32_t notification)
                     } else {
                         // Send any outgoing packets we have ready as fast as possible to keep the time between channel scan and
                         // actual transmission as short as possible
+                        LOG_DEBUG("About to transmit; %d packets are in the TX queue", txQueue.getMaxLen() - txQueue.getFree());
                         txp = txQueue.dequeue();
                         assert(txp);
                         bool sent = startSend(txp);
