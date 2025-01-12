@@ -216,8 +216,9 @@ void MeshPacketQueue::printStats()
         }
     }
     LOG_INFO("TX queue stats: \n       >late: %d\n      >unset: %d\n        >min: %d\n >background: %d\n    >default: %d\n   "
-             ">reliable: %d\n   >response: %d\n       >high: %d\n      >alert: %d\n        >ack: %d\n        >max: %d\n      "
+             ">reliable: %d\n   >response: %d",
+             late, pr_unset, pr_min, pr_background, pr_default, pr_reliable, pr_response);
+    LOG_INFO("TX queue stats (contd)\n       >high: %d\n      >alert: %d\n        >ack: %d\n        >max: %d\n      "
              ">other: %d",
-             late, pr_unset, pr_min, pr_background, pr_default, pr_reliable, pr_response, pr_high, pr_alert, pr_ack, pr_max,
-             pr_other);
+             pr_high, pr_alert, pr_ack, pr_max, pr_other);
 }
