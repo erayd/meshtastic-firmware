@@ -11,6 +11,10 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 
+#if !MESHTASTIC_DISABLE_REPLAY
+#include "modules/ReplayModule.h"
+#endif
+
 #if ARCH_PORTDUINO
 #include "PortduinoGlue.h"
 #include "meshUtils.h"
@@ -380,8 +384,12 @@ void RadioLibInterface::completeSending()
 
     if (p) {
         txGood++;
-        if (!isFromUs(p))
+        if (!isFromUs(p)) {
             txRelay++;
+#if !MESHTASTIC_DISABLE_REPLAY
+            replayModule->adopt(p);
+#endif
+        }
         printPacket("Completed sending", p);
 
         // We are done sending that packet, release it
@@ -475,7 +483,11 @@ void RadioLibInterface::handleReceiveInterrupt()
 
             airTime->logAirtime(RX_LOG, xmitMsec);
 
-            deliverToReceiver(mp);
+#if !MESHTASTIC_DISABLE_REPLAY
+            replayModule->remember(mp);
+#endif
+            if ((rand() % 100 > 65) || mp->decoded.portnum != meshtastic_PortNum_REPLAY_APP) // Simulate packet loss
+                deliverToReceiver(mp);
         }
     }
 }

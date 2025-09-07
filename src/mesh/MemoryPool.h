@@ -96,3 +96,18 @@ template <class T> class MemoryDynamic : public Allocator<T>
         return p;
     }
 };
+
+/**
+ * A version of MemoryDynamic that plays nicely with the replay cache
+ */
+template <class T> class MemoryDynamicReplayAware : public MemoryDynamic<T>
+{
+  public:
+    virtual void release(T *p) override
+    {
+        if (p->is_replay_cached)
+            // Don't free packets that are in the replay cache
+            return;
+        MemoryDynamic<T>::release(p);
+    }
+};

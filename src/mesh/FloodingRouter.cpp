@@ -45,6 +45,11 @@ bool FloodingRouter::shouldFilterReceived(const meshtastic_MeshPacket *p)
 
 void FloodingRouter::perhapsCancelDupe(const meshtastic_MeshPacket *p)
 {
+    if (p->is_replay_cached) {
+        // This is a replayed packet, so we have already transmitted it before, and any further retransmissions
+        // are explicitly requested by a replay client and therefore should not be cancelled or delayed.
+        return;
+    }
     if (config.device.role != meshtastic_Config_DeviceConfig_Role_ROUTER &&
         config.device.role != meshtastic_Config_DeviceConfig_Role_REPEATER &&
         config.device.role != meshtastic_Config_DeviceConfig_Role_ROUTER_LATE &&
