@@ -833,6 +833,11 @@ void AdminModule::handleSetConfig(const meshtastic_Config &c)
     case meshtastic_Config_device_ui_tag:
         // NOOP! This is handled by handleStoreDeviceUIConfig
         break;
+    case meshtastic_Config_replay_tag:
+        LOG_INFO("Set config: Replay");
+        config.has_replay = true;
+        config.replay = c.payload_variant.replay;
+        break;
     }
     if (requiresReboot && !hasOpenEditTransaction) {
         disableBluetooth();
@@ -1028,6 +1033,11 @@ void AdminModule::handleGetConfig(const meshtastic_MeshPacket &req, const uint32
         case meshtastic_AdminMessage_ConfigType_DEVICEUI_CONFIG:
             // NOOP! This is handled by handleGetDeviceUIConfig
             res.get_config_response.which_payload_variant = meshtastic_Config_device_ui_tag;
+            break;
+        case meshtastic_AdminMessage_ConfigType_REPLAY_CONFIG:
+            LOG_INFO("Get config: Replay");
+            res.get_config_response.which_payload_variant = meshtastic_Config_replay_tag;
+            res.get_config_response.payload_variant.replay = config.replay;
             break;
         }
         // NOTE: The phone app needs to know the ls_secs value so it can properly expect sleep behavior.

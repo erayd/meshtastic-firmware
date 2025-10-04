@@ -11,6 +11,10 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 
+#if !MESHTASTIC_EXCLUDE_REPLAY
+#include "modules/ReplayModule.h"
+#endif
+
 #if ARCH_PORTDUINO
 #include "PortduinoGlue.h"
 #include "meshUtils.h"
@@ -176,8 +180,15 @@ ErrorCode RadioLibInterface::send(meshtastic_MeshPacket *p)
 
     if (res != ERRNO_OK) { // we weren't able to queue it, so we must drop it to prevent leaks
         packetPool.release(p);
+#if !MESHTASTIC_EXCLUDE_REPLAY
+        replayModule->logTXDropped();
+#endif
         return res;
     }
+
+#if !MESHTASTIC_EXCLUDE_REPLAY
+    replayModule->logTXQueueDepth(txQueue.getMaxLen() - txQueue.getFree());
+#endif
 
     // set (random) transmit delay to let others reconfigure their radio,
     // to avoid collisions and implement timing-based flooding
@@ -284,6 +295,9 @@ void RadioLibInterface::onNotify(uint32_t notification)
                             // Packet has been sent, count it toward our TX airtime utilization.
                             uint32_t xmitMsec = getPacketTime(txp);
                             airTime->logAirtime(TX_LOG, xmitMsec);
+#if !MESHTASTIC_EXCLUDE_REPLAY
+                            replayModule->logTX(txp, xmitMsec);
+#endif
                         }
                         LOG_DEBUG("%d packets remain in the TX queue", txQueue.getMaxLen() - txQueue.getFree());
                     }
@@ -356,8 +370,14 @@ void RadioLibInterface::clampToLateRebroadcastWindow(NodeNum from, PacketId id)
         p->tx_after = millis() + getTxDelayMsecWeightedWorst(p->rx_snr);
         if (txQueue.enqueue(p)) {
             LOG_DEBUG("Move existing queued packet to the late rebroadcast window %dms from now", p->tx_after - millis());
+#if !MESHTASTIC_EXCLUDE_REPLAY
+            replayModule->logTXDelayed();
+#endif
         } else {
             packetPool.release(p);
+#if !MESHTASTIC_EXCLUDE_REPLAY
+            replayModule->logTXDropped();
+#endif
         }
     }
 }
@@ -400,8 +420,14 @@ void RadioLibInterface::completeSending()
 
     if (p) {
         txGood++;
-        if (!isFromUs(p))
+        if (!isFromUs(p)) {
             txRelay++;
+#if !MESHTASTIC_EXCLUDE_REPLAY
+            replayModule->adopt(p); // Remember and cache packets we relay, so we can replay them later if needed
+        } else {
+            replayModule->remember(p); // Remember stuff we originate, but don't cache it, because we already retry this
+#endif
+        }
         printPacket("Completed sending", p);
 
         // We are done sending that packet, release it
@@ -448,6 +474,10 @@ void RadioLibInterface::handleReceiveInterrupt()
 
         airTime->logAirtime(RX_ALL_LOG, xmitMsec);
 
+#if !MESHTASTIC_EXCLUDE_REPLAY
+        replayModule->logRXBad();
+#endif
+
     } else {
         // Skip the 4 headers that are at the beginning of the rxBuf
         int32_t payloadLen = length - sizeof(PacketHeader);
@@ -457,6 +487,9 @@ void RadioLibInterface::handleReceiveInterrupt()
             LOG_WARN("Ignore received packet too short");
             rxBad++;
             airTime->logAirtime(RX_ALL_LOG, xmitMsec);
+#if !MESHTASTIC_EXCLUDE_REPLAY
+            replayModule->logRXBad();
+#endif
         } else {
             rxGood++;
             // altered packet with "from == 0" can do Remote Node Administration without permission
@@ -495,6 +528,9 @@ void RadioLibInterface::handleReceiveInterrupt()
             printPacket("Lora RX", mp);
 
             airTime->logAirtime(RX_LOG, xmitMsec);
+#if !MESHTASTIC_EXCLUDE_REPLAY
+            replayModule->logRX(mp, xmitMsec);
+#endif
 
             deliverToReceiver(mp);
         }

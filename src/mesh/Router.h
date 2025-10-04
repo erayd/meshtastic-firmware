@@ -91,6 +91,11 @@ class Router : protected concurrency::OSThread, protected PacketHistory
         before us */
     uint32_t rxDupe = 0, txRelayCanceled = 0;
 
+    /**
+     * Proxy getTxDelayMsec() from RadioInterface
+     */
+    uint32_t getTxDelayMsec() { return iface ? iface->getTxDelayMsec() : 100; } // Default to 100ms if no interface is defined
+
   protected:
     friend class RoutingModule;
 

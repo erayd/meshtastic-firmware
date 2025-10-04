@@ -99,6 +99,9 @@
 #if !MESHTASTIC_EXCLUDE_RANGETEST && !MESHTASTIC_EXCLUDE_GPS
 #include "modules/RangeTestModule.h"
 #endif
+#if !MESHTASTIC_EXCLUDE_REPLAY
+#include "modules/ReplayModule.h"
+#endif
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !MESHTASTIC_EXCLUDE_SERIAL
 #include "modules/SerialModule.h"
 #endif
@@ -296,6 +299,9 @@ void setupModules()
 #if !MESHTASTIC_EXCLUDE_RANGETEST && !MESHTASTIC_EXCLUDE_GPS
     if (moduleConfig.has_range_test && moduleConfig.range_test.enabled)
         new RangeTestModule();
+#endif
+#if !MESHTASTIC_EXCLUDE_REPLAY
+    replayModule = new ReplayModule();
 #endif
     // NOTE! This module must be added LAST because it likes to check for replies from other modules and avoid sending extra
     // acks

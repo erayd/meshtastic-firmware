@@ -1,0 +1,294 @@
+diff --git a/meshtastic/admin.proto b/meshtastic/admin.proto
+index 0259c2a..7b008a7 100644
+--- a/meshtastic/admin.proto
++++ b/meshtastic/admin.proto
+@@ -81,6 +81,11 @@ message AdminMessage {
+      * device-ui config
+      */
+     DEVICEUI_CONFIG = 9;
++
++    /*
++     * Replay config
++     */
++    REPLAY_CONFIG = 10;
+   }
+ 
+   /*
+diff --git a/meshtastic/config.proto b/meshtastic/config.proto
+index f17a078..3df7532 100644
+--- a/meshtastic/config.proto
++++ b/meshtastic/config.proto
+@@ -1182,6 +1182,73 @@ message Config {
+    */
+   message SessionkeyConfig {}
+ 
++  /*
++   * Configuration for the packet replay feature
++   */
++  message ReplayConfig {
++    enum ReplayPriority {
++      /*
++       * Lowest priority, for nice-to-have stuff
++       */
++      BACKGROUND = 0;
++
++      /*
++       * Low priority, for less important packets
++       */
++      LOW = 1;
++
++      /*
++       * Normal priority, for regular packets
++       */
++      NORMAL = 2;
++
++      /*
++       * High priority, for important packets
++       */
++      HIGH = 3;
++    }
++
++    /*
++     * Whether the replay feature is enabled
++     */
++    bool enabled = 1;
++
++    /*
++     * How often to broadcast stats to the mesh
++     */
++    uint32 stats_broadcast_secs = 2;
++
++    /*
++     * Only serve replay requests from routers
++     */
++    bool requests_routers_only = 3;
++
++    /*
++     * Only serve replay requests from favourite nodes
++     */
++    bool requests_favourites_only = 4;
++
++    /*
++     * Minimum priority to cache
++     */
++    ReplayConfig.ReplayPriority min_cache_priority = 5;
++
++    /*
++     * Minimum priority to request
++     */
++    ReplayConfig.ReplayPriority min_request_priority = 6;
++
++    /*
++     * Flush the current advert after this many rebroadcast packets
++     */
++    uint32 flush_packets = 7;
++
++    /*
++     * Flush the current advert after this many seconds
++     */
++    uint32 flush_secs = 8;
++  }
++
+   /*
+    * Payload Variant
+    */
+@@ -1196,5 +1263,6 @@ message Config {
+     SecurityConfig security = 8;
+     SessionkeyConfig sessionkey = 9;
+     DeviceUIConfig device_ui = 10;
++    ReplayConfig replay = 11;
+   }
+ }
+diff --git a/meshtastic/localonly.proto b/meshtastic/localonly.proto
+index bcb2796..02b5088 100644
+--- a/meshtastic/localonly.proto
++++ b/meshtastic/localonly.proto
+@@ -63,6 +63,11 @@ message LocalConfig {
+    * The part of the config that is specific to Security settings
+    */
+   Config.SecurityConfig security = 9;
++
++  /*
++   * The part of the config that is specific to the replay settings
++   */
++  Config.ReplayConfig replay = 11;
+ }
+ 
+ message LocalModuleConfig {
+diff --git a/meshtastic/mesh.proto b/meshtastic/mesh.proto
+index adfdf51..328a73f 100644
+--- a/meshtastic/mesh.proto
++++ b/meshtastic/mesh.proto
+@@ -2397,3 +2397,155 @@ message ChunkedPayloadResponse {
+     resend_chunks resend_chunks = 4;
+   }
+ }
++
++message ReplayStats {
++  /*
++   * Window length (seconds)
++   */
++  uint32 window_length_secs = 1;
++
++  /*
++   * Milliseconds spent receiving packets
++   */
++  uint32 rx_ms = 2;
++
++  /*
++   * Milliseconds spent transmitting packets
++   */
++  uint32 tx_ms = 3;
++
++  /*
++   * Number of unique packets received
++   */
++  uint32 rx_packets_unique = 4;
++
++  /*
++   * Number of duplicate packets received
++   */
++  uint32 rx_packets_duplicate = 5;
++
++  /*
++   * Number of duplicate packets received with a higher hop limit than the one in the cache
++   */
++  uint32 rx_packets_duplicate_xh = 6;
++
++  /*
++   * Number of packets dropped for receive errors
++   */
++  uint32 rx_packets_bad = 7;
++
++  /*
++   * Number of received packets with no further hops remaining (excludes zero-hop)
++   */
++  uint32 rx_packets_eol = 8;
++
++  /*
++   * Number of received packets that originated from a direct neighbour (excludes zero-hop)
++   */
++  uint32 rx_packets_local = 9;
++
++  /*
++   * Number of zero-hop packets received
++   */
++  uint32 rx_packets_zero = 10;
++
++  /*
++   * Number of packets originated from this node
++   */
++  uint32 tx_packets_mine = 11;
++
++  /*
++   * Number of packets relayed (not originated locally)
++   */
++  uint32 tx_packets_relay = 12;
++
++  /*
++   * Number of packets we wanted to send but dropped due to queue full
++   */
++  uint32 tx_packets_dropped = 13;
++
++  /*
++   * Number of packets we delayed to the late rebroadcast window
++   */
++  uint32 tx_packets_delayed = 14;
++
++  /*
++   * Number of packets replayed at priority 0 (BACKGROUND)
++   */
++  uint32 tx_packets_p0 = 15;
++
++  /*
++   * Number of packets replayed at priority 1 (LOW)
++   */
++  uint32 tx_packets_p1 = 16;
++
++  /*
++   * Number of packets replayed at priority 2 (NORMAL)
++   */
++  uint32 tx_packets_p2 = 17;
++
++  /*
++   * Number of packets replayed at priority 3 (HIGH)
++   */
++  uint32 tx_packets_p3 = 18;
++
++  /*
++   * Number of priority 0 packets we skipped replaying
++   */
++  uint32 tx_packets_p0_skipped = 19;
++
++  /*
++   * Number of priority 1 packets we skipped replaying
++   */
++  uint32 tx_packets_p1_skipped = 20;
++
++  /*
++   * Number of priority 2 packets we skipped replaying
++   */
++  uint32 tx_packets_p2_skipped = 21;
++
++  /*
++   * Number of priority 3 packets we skipped replaying
++   */
++  uint32 tx_packets_p3_skipped = 22;
++
++  /*
++   * Number of packets we wanted to replay but dropped instead
++   */
++   uint32 replay_dropped = 23;
++
++  /*
++   * High water mark for the TX queue
++   */
++   uint32 tx_max_queue = 24;
++
++  /*
++  * High water mark for the replay queue
++  */
++  uint32 replay_max_queue = 25;
++
++  /*
++   * Number of packets in the replay cache
++   */
++  uint32 cached = 26;
++
++  /*
++   * Number of packets we wanted to replay but were not in the replay cache
++   */
++  uint32 cache_misses = 27;
++
++  /*
++   * Number of packets we missed and learned about via replay advertisements
++   */
++  uint32 missed = 28;
++
++  /*
++   * Number of packets we missed, and gave up on requesting
++   */
++  uint32 gave_up = 29;
++
++  /*
++   * Number of advertisements we sent (excludes replayed adverts)
++   */
++  uint32 adverts_sent = 30;
++}
+\ No newline at end of file
+diff --git a/meshtastic/portnums.proto b/meshtastic/portnums.proto
+index e388a6f..5b2c0a0 100644
+--- a/meshtastic/portnums.proto
++++ b/meshtastic/portnums.proto
+@@ -134,6 +134,11 @@ enum PortNum {
+    */
+   PAXCOUNTER_APP = 34;
+ 
++  /*
++   * Used for the on-demand packet replay feature
++   */
++  REPLAY_APP = 35;
++
+   /*
+    * Provides a hardware serial interface to send and receive from the Meshtastic network.
+    * Connect to the RX/TX pins of a device with 38400 8N1. Packets received from the Meshtastic
