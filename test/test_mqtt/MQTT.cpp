@@ -322,7 +322,7 @@ void setUp(void)
     owner = meshtastic_User{.id = "!12345678"};
     myNodeInfo = meshtastic_MyNodeInfo{.my_node_num = 10};
     localPosition =
-        meshtastic_Position{.has_latitude_i = true, .latitude_i = 7 * 1e7, .has_longitude_i = true, .longitude_i = 3 * 1e7};
+        meshtastic_Position{.has_latitude_i = true, .latitude_i = 700000000, .has_longitude_i = true, .longitude_i = 300000000};
 
     router = mockRouter = new MockRouter();
     service = mockMeshService = new MockMeshService();
